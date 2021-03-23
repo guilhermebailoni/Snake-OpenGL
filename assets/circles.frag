@@ -5,6 +5,16 @@ in vec4 fragColor;
 out vec4 outColor;
 
 void main() {
-  float intensity = 1.0 - length(gl_PointCoord - vec2(0.5)) * 2.0;
+  float intensity = 0.0;
+  if(length(gl_PointCoord - vec2(0.5)) * 2.0 >= 1.0f){
+      intensity = 0.0;
+  } else {
+      intensity = 1.0;
+  }
   outColor = fragColor * intensity;
 }
+
+/*void main() {
+  float intensity = 1.0 - length(gl_PointCoord - vec2(0.5)) * 2.0;
+  outColor = fragColor * intensity;
+}*/
