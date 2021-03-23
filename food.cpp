@@ -1,9 +1,9 @@
-#include "snake.hpp"
+#include "walls.hpp"
 
+#include <cppitertools/itertools.hpp>
 #include <glm/gtx/fast_trigonometry.hpp>
-#include <glm/gtx/rotate_vector.hpp>
 
-void Snake::initializeGL(GLuint program) {
+void Food::initializeGL(GLuint program, glm::vec2 m_oldTranslation) {
     terminateGL();
 
     m_program = program;
@@ -14,25 +14,37 @@ void Snake::initializeGL(GLuint program) {
     m_pointSizeLoc = glGetUniformLocation(m_program, "pointSize");
 
     m_rotation = 0.0f;
-    m_translation = glm::vec2(0);
+    //m_translation = glm::vec2(0);
     m_velocity = glm::vec2(0);
-    m_pointSize = 40.0f;
+    m_pointSize = 20.0f;
+
+    float x = m_randomDist(m_randomEngine)*35.0f;
+    float y = m_randomDist(m_randomEngine)*35.0f;
+
+    printf("random values x: %f y: %f .", x, y);
 
     std::array<glm::vec2, 1> positions{
-        //Snake Body
-        glm::vec2{+0.0f, +0.0f},
-        //Snake Right Eye
-        // glm::vec2{+1.5f, +1.0f}, glm::vec2{+1.5f, +0.0f},
-        // //Snake Left Eye
-        // glm::vec2{-1.5f, +1.0f}, glm::vec2{-1.5f, +0.0f},
+        //Food Position
+        glm::vec2{x,y}
+        //glm::vec2{0.0f,0.0f}
     };
 
     // Normalize
     for (auto &position :positions) {
-        position /= glm::vec2{15.5f, 15.5f};
+        position /= glm::vec2{50.0f, 50.0f};
+        position += m_oldTranslation;
     }
 
-    m_color = glm::vec4{0.55f,0.85f,0.2f,1.0f};
+    m_translation = positions.front();
+
+    positions[0].x /= 15.5f;
+    positions[0].y /= 15.5f;
+
+    printf("position x: %f y: %f .", positions[0].x, positions[0].y);
+    printf("translation x: %f y: %f .", m_translation.x, m_translation.y);
+    printf("old_translation x: %f y: %f .", m_oldTranslation.x, m_oldTranslation.y);
+
+    m_color = glm::vec4{1.0f,0.55f,0.00f,1.0f};
 
     // Generate VBO
     glGenBuffers(1, &m_vbo);
@@ -59,8 +71,7 @@ void Snake::initializeGL(GLuint program) {
     glBindVertexArray(0);
 }
 
-void Snake::paintGL(const GameData &gameData) {
-  if (gameData.m_state != State::Playing) return;
+void Food::paintGL() {
 
   glUseProgram(m_program);
 
@@ -75,34 +86,17 @@ void Snake::paintGL(const GameData &gameData) {
 
 
   glDrawArrays(GL_POINTS, 0, 1);
-// glDrawArrays(GL_LINES, 1, 4);
 
   glBindVertexArray(0);
 
   glUseProgram(0);
 }
 
-void Snake::terminateGL() {
-  glDeleteBuffers(1, &m_vbo);
-  glDeleteVertexArrays(1, &m_vao);
+void Food::terminateGL() {
+    glDeleteBuffers(1, &m_vbo);
+    glDeleteVertexArrays(1, &m_vao);
 }
 
-void Snake::update(const GameData &gameData, float deltaTime) {
-    // Rotate
-    if (gameData.m_input[static_cast<size_t>(Input::Left)])
-        m_rotation = glm::wrapAngle(m_rotation + 5.0f * deltaTime);
-    if (gameData.m_input[static_cast<size_t>(Input::Right)])
-        m_rotation = glm::wrapAngle(m_rotation - 5.0f * deltaTime);
-
-    // Move
-    if(gameData.m_state != State::Playing) return;
-    if (gameData.m_input[static_cast<size_t>(Input::Up)]) {
-        // More speed in the forward vector
-        glm::vec2 forward = glm::rotate(glm::vec2{0.0f, 1.0f}, m_rotation);
-        m_velocity = (forward * 350.0f) * deltaTime;
-    } else {
-        // Moves at normal speed
-        glm::vec2 forward = glm::rotate(glm::vec2{0.0f, 1.0f}, m_rotation);
-        m_velocity = forward * 140.0f * deltaTime;
-    }
+void Food::update(const Snake &snake, float deltaTime) {
+    m_translation -= snake.m_velocity * deltaTime;
 }

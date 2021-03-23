@@ -16,17 +16,19 @@ void Walls::initializeGL(GLuint program) {
     m_rotation = 0.0f;
     m_translation = glm::vec2(0);
     m_velocity = glm::vec2(0);
-    m_pointSize = 50.0f;
 
-    std::array<glm::vec2, 12> positions{
+    m_innerWall = 45.0;
+    float m_outerWall = 100.0;
+
+    std::array<glm::vec2, 16> positions{
         //Top Border
-        glm::vec2{-55.0f, +45.0f}, glm::vec2{+0.0f, +60.0f}, glm::vec2{+55.0f, +45.0f},
+        glm::vec2{-m_outerWall, +m_outerWall}, glm::vec2{-m_outerWall, +m_innerWall}, glm::vec2{+m_outerWall, +m_outerWall}, glm::vec2{+m_outerWall, +m_innerWall},
         //Right Border
-        glm::vec2{+45.0f, +55.0f}, glm::vec2{+60.0f, +0.0f}, glm::vec2{+45.0f, -55.0f},
+        glm::vec2{+m_outerWall, -m_outerWall}, glm::vec2{+m_innerWall, -m_outerWall}, glm::vec2{+m_outerWall, +m_outerWall}, glm::vec2{+m_innerWall, +m_outerWall},
         //Left Border
-        glm::vec2{-45.0f, +55.0f}, glm::vec2{-60.0f, +0.0f}, glm::vec2{-45.0f, -55.0f},
+        glm::vec2{-m_outerWall, -m_outerWall}, glm::vec2{-m_innerWall, -m_outerWall}, glm::vec2{-m_outerWall, +m_outerWall}, glm::vec2{-m_innerWall, +m_outerWall},
         //Bottom Border
-        glm::vec2{-55.0f, -45.0f}, glm::vec2{+0.0f, -60.0f}, glm::vec2{+55.0f, -45.0f},    
+        glm::vec2{-m_outerWall, -m_outerWall}, glm::vec2{-m_outerWall, -m_innerWall}, glm::vec2{+m_outerWall, -m_outerWall}, glm::vec2{+m_outerWall, -m_innerWall},
     };
 
     // Normalize
@@ -34,7 +36,7 @@ void Walls::initializeGL(GLuint program) {
         position /= glm::vec2{50.0f, 50.0f};
     }
 
-    m_color = {100.4f,59.3f,43.0f,0.5f};
+    m_color = glm::vec4{0.2f,0.3f,0.5f,1.0f};
     // m_scale = 1.0f;
 
     // Generate VBO
@@ -74,7 +76,11 @@ void Walls::paintGL() {
   glUniform1f(m_pointSizeLoc, m_pointSize);
 
   glUniform4fv(m_colorLoc, 1, &m_color.r);
-  glDrawArrays(GL_TRIANGLES, 0, 12);
+  //glDrawArrays(GL_TRIANGLES, 0, 12);
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+  glDrawArrays(GL_TRIANGLE_STRIP, 4, 4);
+  glDrawArrays(GL_TRIANGLE_STRIP, 8, 4);
+  glDrawArrays(GL_TRIANGLE_STRIP, 12, 4);
 
   glBindVertexArray(0);
 

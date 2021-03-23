@@ -6,6 +6,7 @@
 
 class OpenGLWindow;
 class Walls;
+class Food;
 
 class Snake {
     public:
@@ -19,6 +20,7 @@ class Snake {
     private:
         friend OpenGLWindow;
         friend Walls;
+        friend Food;
         
         GLuint m_program{};
         GLint m_translationLoc{};
@@ -32,7 +34,7 @@ class Snake {
 
         glm::vec4 m_color{1};
         float m_rotation{};
-        float m_scale{0.5f};
+        float m_scale{1.0f};
         float m_pointSize{};
         glm::vec2 m_translation{glm::vec2(0)};
         glm::vec2 m_velocity{glm::vec2(0)};

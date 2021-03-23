@@ -8,6 +8,7 @@
 #include "abcg.hpp"
 #include "snake.hpp"
 #include "walls.hpp"
+#include "food.hpp"
 
 class OpenGLWindow : public abcg::OpenGLWindow {
  protected:
@@ -19,7 +20,7 @@ class OpenGLWindow : public abcg::OpenGLWindow {
   void terminateGL() override;
 
  private:
-  GLuint m_starsProgram{};
+  GLuint m_circlesProgram{};
   GLuint m_objectsProgram{};
 
   int m_viewportWidth{};
@@ -29,7 +30,8 @@ class OpenGLWindow : public abcg::OpenGLWindow {
 
   Snake m_snake;
   Walls m_walls;
-  int score{0};
+  Food m_food;
+  int m_score = 0;
 
   abcg::ElapsedTimer m_restartWaitTimer;
 
@@ -37,6 +39,8 @@ class OpenGLWindow : public abcg::OpenGLWindow {
 
   std::default_random_engine m_randomEngine;
 
+  void checkCollisions();
+  void checkWinConditions();
   void restart();
   void update();
 };

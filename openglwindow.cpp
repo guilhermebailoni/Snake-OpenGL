@@ -52,8 +52,8 @@ void OpenGLWindow::initializeGL() {
     throw abcg::Exception{abcg::Exception::Runtime("Cannot load font file")};
   }
 
-  // Create program to render the stars
-  m_starsProgram = createProgramFromFile(getAssetsPath() + "circles.vert",
+  // Create program to render the circle objects
+  m_circlesProgram = createProgramFromFile(getAssetsPath() + "circles.vert",
                                          getAssetsPath() + "circles.frag");
   // Create program to render the other objects
   m_objectsProgram = createProgramFromFile(getAssetsPath() + "objects.vert",
@@ -75,9 +75,10 @@ void OpenGLWindow::initializeGL() {
 void OpenGLWindow::restart() {
   m_gameData.m_state = State::Playing;
 
-
-  m_snake.initializeGL(m_objectsProgram);
+  m_score = 0;
+  m_snake.initializeGL(m_circlesProgram);
   m_walls.initializeGL(m_objectsProgram);
+  m_food.initializeGL(m_objectsProgram, glm::vec2(0));
 }
 
 void OpenGLWindow::update() {
@@ -90,8 +91,17 @@ void OpenGLWindow::update() {
     return;
   }
 
-  m_snake.update(m_gameData, deltaTime);
-  m_walls.update(m_snake, deltaTime);
+  if (m_gameData.m_state == State::Playing) {
+    checkCollisions();
+    checkWinConditions();
+  }
+
+  if(m_gameData.m_state == State::Playing){
+    m_snake.update(m_gameData, deltaTime);
+    m_walls.update(m_snake, deltaTime);
+    m_food.update(m_snake, deltaTime);
+  }
+  
 }
 
 void OpenGLWindow::paintGL() {
@@ -101,6 +111,7 @@ void OpenGLWindow::paintGL() {
   glViewport(0, 0, m_viewportWidth, m_viewportHeight);
 
   m_walls.paintGL();
+  m_food.paintGL();
   m_snake.paintGL(m_gameData);
 }
 
@@ -108,7 +119,7 @@ void OpenGLWindow::paintUI() {
   abcg::OpenGLWindow::paintUI();
 
   {
-    auto size{ImVec2(250, 60)};
+    auto size{ImVec2(330, 60)};
     auto position{ImVec2((m_viewportWidth * 0.05f),
                          (m_viewportHeight * 0.05f))};
     ImGui::SetNextWindowPos(position);
@@ -119,13 +130,7 @@ void OpenGLWindow::paintUI() {
     ImGui::Begin(" ", nullptr, flags);
     ImGui::PushFont(m_font);
 
-    if (m_gameData.m_state == State::GameOver) {
-      ImGui::Text("Game Over!");
-    } else if (m_gameData.m_state == State::Win) {
-      ImGui::Text("*You Win!*");
-    } else {
-      ImGui::Text("Score: %d", score);
-    }
+    ImGui::Text("Score: %d", m_score);
 
     ImGui::PopFont();
     ImGui::End();
@@ -140,9 +145,52 @@ void OpenGLWindow::resizeGL(int width, int height) {
 }
 
 void OpenGLWindow::terminateGL() {
-  glDeleteProgram(m_starsProgram);
+  glDeleteProgram(m_circlesProgram);
   glDeleteProgram(m_objectsProgram);
   
   m_snake.terminateGL();
   m_walls.terminateGL();
+  m_food.terminateGL();
+}
+
+void OpenGLWindow::checkCollisions() {
+  // Check collision
+  auto innerWall{m_walls.m_innerWall};
+  innerWall /= 50.0f;
+
+  //printf("translation test: x-%f y-%f ", m_walls.m_translation.x, m_walls.m_translation.y);
+
+  auto distance{glm::distance(m_snake.m_translation, m_food.m_translation)};
+
+
+  //checking if snake colided with food
+  if(distance < m_snake.m_pointSize/m_viewportWidth + m_food.m_pointSize/m_viewportWidth){
+    //getting wall translation, used for generating food inside the wall
+    glm::vec2 oldTranslation = m_walls.m_translation;
+    // printf("Food old translation: x:%f y%f", oldTranslation.x, oldTranslation.y);
+    //printf("Wall translation: x:%f y%f", m_walls.m_translation.x, m_walls.m_translation.y);
+    //deletes and generates new food
+    m_food.terminateGL();
+    m_food.initializeGL(m_objectsProgram, oldTranslation);
+    //increases score count
+    m_score++;
+  }
+
+  //checking if snake colided with wall
+  if(m_walls.m_translation.x + (m_snake.m_pointSize/m_viewportWidth) > + innerWall 
+   ||m_walls.m_translation.x - (m_snake.m_pointSize/m_viewportWidth) < - innerWall 
+   ||m_walls.m_translation.y + (m_snake.m_pointSize/m_viewportHeight) > + innerWall 
+   ||m_walls.m_translation.y - (m_snake.m_pointSize/m_viewportHeight) < - innerWall)
+  {
+    m_gameData.m_state = State::GameOver;
+    m_restartWaitTimer.restart();
+  }
+}
+
+void OpenGLWindow::checkWinConditions() {
+  //max score
+  if(m_score >= 999){
+    m_gameData.m_state = State::Win;
+    m_restartWaitTimer.restart();
+  }
 }

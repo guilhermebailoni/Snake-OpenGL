@@ -1,19 +1,20 @@
-#ifndef WALLS_HPP_
-#define WALLS_HPP_
+#ifndef FOOD_HPP_
+#define FOOD_HPP_
+
+#include <random>
 
 #include "abcg.hpp"
 #include "gamedata.hpp"
 #include "snake.hpp"
-#include "food.hpp"
+#include "walls.hpp"
 
 class OpenGLWindow;
 
-class Walls {
+class Food {
     public:
-        void initializeGL(GLuint program);
+        void initializeGL(GLuint program, glm::vec2 m_oldTranslation);
         void paintGL();
-        void terminateGL(); 
-        float m_innerWall;
+        void terminateGL();
 
         void update(const Snake &snake, float deltaTime);
 
@@ -31,11 +32,16 @@ class Walls {
         GLuint m_vbo{};
 
         glm::vec4 m_color{1};
+        bool m_hit{false};
         float m_rotation{};
         float m_scale{1.0f};
         float m_pointSize{};
         glm::vec2 m_translation{glm::vec2(0)};
+        glm::vec2 m_oldTranslation;
         glm::vec2 m_velocity{glm::vec2(0)};
+
+        std::default_random_engine m_randomEngine;
+        std::uniform_real_distribution<float> m_randomDist{-1.0f, 1.0f};
 };
 
 #endif
